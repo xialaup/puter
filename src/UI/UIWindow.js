@@ -28,6 +28,9 @@ import new_context_menu_item from '../helpers/new_context_menu_item.js';
 import refresh_item_container from '../helpers/refresh_item_container.js';
 import UIWindowSaveAccount from './UIWindowSaveAccount.js';
 import UIWindowEmailConfirmationRequired from './UIWindowEmailConfirmationRequired.js';
+import launch_app from "../helpers/launch_app.js"
+import UIWindowShare from './UIWindowShare.js';
+import item_icon from '../helpers/item_icon.js';
 
 const el_body = document.getElementsByTagName('body')[0];
 
@@ -98,7 +101,7 @@ async function UIWindow(options) {
     options.show_minimize_button = options.show_minimize_button ?? true;
     options.on_close = options.on_close ?? undefined;
     options.parent_uuid = options.parent_uuid ?? null;
-    options.selectable_body = options.selectable_body ?? true;
+    options.selectable_body = (options.selectable_body === undefined || options.selectable_body === true) ? true : false;
     options.show_in_taskbar = options.show_in_taskbar ?? true;
     options.show_maximize_button = options.show_maximize_button ?? true;
     options.single_instance = options.single_instance ?? false;
@@ -195,15 +198,15 @@ async function UIWindow(options) {
                 data-disable_parent_window = "${html_encode(options.disable_parent_window)}"
                 data-name="${html_encode(options.title)}" 
                 data-path ="${html_encode(options.path)}"
-                data-uid ="${options.uid}"
-                data-element_uuid="${options.element_uuid}"
-                data-parent_uuid="${options.parent_uuid}"
+                data-uid ="${html_encode(options.uid)}"
+                data-element_uuid="${html_encode(options.element_uuid)}"
+                data-parent_uuid="${html_encode(options.parent_uuid)}"
                 ${options.parent_instance_id ? `data-parent_instance_id="${options.parent_instance_id}"` : ''}
                 data-id ="${win_id}"
-                data-iframe_msg_uid ="${options.iframe_msg_uid}"
+                data-iframe_msg_uid ="${html_encode(options.iframe_msg_uid)}"
                 data-is_dir ="${options.is_dir}"
                 data-return_to_parent_window = "${options.return_to_parent_window}"
-                data-initiating_app_uuid = "${options.initiating_app_uuid}"
+                data-initiating_app_uuid = "${html_encode(options.initiating_app_uuid)}"
                 data-is_openFileDialog ="${options.is_openFileDialog}"
                 data-is_saveFileDialog ="${options.is_saveFileDialog}"
                 data-is_directoryPicker ="${options.is_directoryPicker}"
@@ -263,6 +266,7 @@ async function UIWindow(options) {
                 h += `<h2 class="window-sidebar-title disable-user-select">Favorites</h2>`;
                 h += `<div draggable="false" title="Home" class="window-sidebar-item disable-user-select ${options.path === window.home_path ? 'window-sidebar-item-active' : ''}" data-path="${html_encode(window.home_path)}"><img draggable="false" class="window-sidebar-item-icon" src="${html_encode(window.icons['folder-home.svg'])}">Home</div>`;
                 h += `<div draggable="false" title="Documents" class="window-sidebar-item disable-user-select ${options.path === window.docs_path ? 'window-sidebar-item-active' : ''}" data-path="${html_encode(window.docs_path)}"><img draggable="false" class="window-sidebar-item-icon" src="${html_encode(window.icons['folder-documents.svg'])}">Documents</div>`;
+                h += `<div draggable="false" title="Public" class="window-sidebar-item disable-user-select ${options.path === window.public_path ? 'window-sidebar-item-active' : ''}" data-path="${html_encode(window.public_path)}"><img draggable="false" class="window-sidebar-item-icon" src="${html_encode(window.icons['folder-public.svg'])}">Public</div>`;
                 h += `<div draggable="false" title="Pictures" class="window-sidebar-item disable-user-select ${options.path === window.pictures_path ? 'window-sidebar-item-active' : ''}" data-path="${html_encode(window.pictures_path)}"><img draggable="false" class="window-sidebar-item-icon" src="${html_encode(window.icons['folder-pictures.svg'])}">Pictures</div>`;
                 h += `<div draggable="false" title="Desktop" class="window-sidebar-item disable-user-select ${options.path === window.desktop_path ? 'window-sidebar-item-active' : ''}" data-path="${html_encode(window.desktop_path)}"><img draggable="false" class="window-sidebar-item-icon" src="${html_encode(window.icons['folder-desktop.svg'])}">Desktop</div>`;
                 h += `<div draggable="false" title="Videos" class="window-sidebar-item disable-user-select ${options.path === window.videos_path ? 'window-sidebar-item-active' : ''}" data-path="${html_encode(window.videos_path)}"><img draggable="false" class="window-sidebar-item-icon" src="${html_encode(window.icons['folder-videos.svg'])}">Videos</div>`;
@@ -271,9 +275,10 @@ async function UIWindow(options) {
         }
 
         // Menubar
-        {
-            h += `<div class="window-menubar">`;
-            h += `</div>`;
+        if(window.menubar_style === 'window'){
+            h += `<div class="window-menubar" data-window-id="${win_id}"></div>`;
+        }else if(window.menubar_style === 'desktop'){
+            $('.toolbar-puter-logo').after(`<div class="window-menubar window-menubar-global" data-window-id="${win_id}"></div>`);
         }
 
         // Navbar
@@ -335,6 +340,31 @@ async function UIWindow(options) {
             if(options.is_dir){
                 // Detail layout header
                 h += window.explore_table_headers();
+                
+                // Maybe render iframe for users public directory
+                (() => {
+                    if ( options.is_saveFileDialog || options.is_openFileDialog || options.is_directoryPicker ) {
+                        return false;
+                    }
+                    
+                    if ( ! options.path || ! options.path.startsWith('/') ) { // sus
+                        return false;
+                    }
+                    
+                    const components = options.path.slice(1).split('/');
+
+                    if ( components.length === 2 && components[1] === 'Public' ) {
+                        const username = components[0];
+                        h += `<iframe
+                            style="display:block;width:100%"
+                            tabindex="-1"
+                            frameborder="0"
+                            src="http://${username}.at.${window.hosting_domain}"
+                            height=150
+                            ></iframe>
+                        `;
+                    }
+                })();
 
                 // Add 'This folder is empty' message by default
                 h += `<div class="explorer-empty-message">This folder is empty</div>`;
@@ -435,7 +465,7 @@ async function UIWindow(options) {
                 onClick: function(){
                     let open_window_count = parseInt($(`.taskbar-item[data-app="${options.app}"]`).attr('data-open-windows'));
                     if(open_window_count === 0){
-                        window.launch_app({
+                        launch_app({
                             name: options.app,
                         }) 
                     }else{
@@ -662,7 +692,7 @@ async function UIWindow(options) {
 
                 // change path of each item to preserve privacy
                 for(let i=0; i<selected_files.length; i++)
-                    selected_files[i].path = `~/` + selected_files[i].path.split('/').slice(2).join('/');
+                    selected_files[i].path = privacy_aware_path(selected_files[i].path)
             }
 
             const ifram_msg_uid = $(el_window).attr('data-iframe_msg_uid');
@@ -739,7 +769,7 @@ async function UIWindow(options) {
 
                 // change path of each item to preserve privacy
                 for(let i=0; i<selected_dirs.length; i++)
-                    selected_dirs[i].path = `~/` + selected_dirs[i].path.split('/').slice(2).join('/');
+                    selected_dirs[i].path = privacy_aware_path(selected_dirs[i].path)
             }
 
             const ifram_msg_uid = $(el_window).attr('data-iframe_msg_uid');
@@ -1002,6 +1032,119 @@ async function UIWindow(options) {
         if(!window.is_auth() && !(await UIWindowLogin()))
             return;
 
+        // --------------------------------------------------------
+        // SIDEBAR sharing
+        // --------------------------------------------------------
+        if(options.is_dir && !isMobile.phone){
+            puter.fs.readdir('/').then(function(shared_users){
+                let ht = '';
+                if(shared_users && shared_users.length - 1 > 0){
+                    ht += `<h2 class="window-sidebar-title disable-user-select">Shared with me</h2>`;
+                    for (let index = 0; index < shared_users.length; index++) {
+                        const shared_user = shared_users[index];
+                        // don't show current user's folder!
+                        if(shared_user.name === window.user.username)
+                            continue;
+                            ht += `<div  class="window-sidebar-item disable-user-select ${options.path === shared_user.path ? 'window-sidebar-item-active' : ''}" 
+                                    data-path="${shared_user.path}"
+                                    data-sharing-username="${html_encode(shared_user.name)}"
+                                    title="${html_encode(shared_user.name)}"
+                                    data-is_shared="1">
+                                        <img class="window-sidebar-item-icon" src="${html_encode(window.icons['shared-outline.svg'])}">${shared_user.name}
+                                    </div>`;  
+                    }
+                }
+                $(el_window).find('.window-sidebar').append(ht);
+
+                $(el_window).find('.window-sidebar-item:not(.ui-droppable)').droppable({
+                    accept: '.item',
+                    tolerance: 'pointer',
+                    drop: function( event, ui ) {
+                        // check if item was actually dropped on this navbar path
+                        if($(window.mouseover_window).attr('data-id') !== $(el_window).attr('data-id')){
+                            return;
+                        }
+                        const items_to_share = []
+                        
+                        // first item
+                        items_to_share.push({
+                            uid: $(ui.draggable).attr('data-uid'),
+                            path: $(ui.draggable).attr('data-path'),
+                            icon: $(ui.draggable).find('.item-icon img').attr('src'),
+                            name: $(ui.draggable).find('.item-name').text(),
+                        }); 
+                        
+                        // all subsequent items
+                        const cloned_items = document.getElementsByClassName('item-selected-clone');
+                        for(let i =0; i<cloned_items.length; i++){
+                            const source_item = document.getElementById('item-' + $(cloned_items[i]).attr('data-id'));
+                            if(!source_item) continue;
+                            items_to_share.push({
+                                uid: $(source_item).attr('data-uid'),
+                                path: $(source_item).attr('data-path'),
+                                icon: $(source_item).find('.item-icon img').attr('src'),
+                                name: $(source_item).find('.item-name').text(),
+                            })
+                        }
+            
+                        // if alt key is down, create shortcut items
+                        if(event.altKey){
+                            items_to_share.forEach((item_to_move) => {
+                                window.create_shortcut(
+                                    path.basename($(item_to_move).attr('data-path')), 
+                                    $(item_to_move).attr('data-is_dir') === '1', 
+                                    $(this).attr('data-path'), 
+                                    null, 
+                                    $(item_to_move).attr('data-shortcut_to') === '' ? $(item_to_move).attr('data-uid') : $(item_to_move).attr('data-shortcut_to'),
+                                    $(item_to_move).attr('data-shortcut_to_path') === '' ? $(item_to_move).attr('data-path') : $(item_to_move).attr('data-shortcut_to_path'),
+                                );
+                            });
+                        }
+                        // move items
+                        else{
+                            UIWindowShare(items_to_share, $(this).attr('data-sharing-username'));
+                        }
+            
+                        $('.item-container').droppable('enable')
+                        $(this).removeClass('window-sidebar-item-drag-active');
+            
+                        return false;
+                    },
+                    over: function(event, ui){
+                        // check if item was actually hovered over this window
+                        if($(window.mouseover_window).attr('data-id') !== $(el_window).attr('data-id'))
+                            return;
+            
+                        // Don't do anything if the dragged item is NOT a UIItem
+                        if(!$(ui.draggable).hasClass('item'))
+                            return;
+                        
+                        // highlight this item
+                        $(this).addClass('window-sidebar-item-drag-active');
+                        $('.ui-draggable-dragging').css('opacity', 0.2)
+                        $('.item-selected-clone').css('opacity', 0.2)
+            
+                        // disable all window bodies 
+                        $('.item-container').droppable( 'disable' )
+                    },
+                    out: function(event, ui){
+                        // Don't do anything if the dragged element is NOT a UIItem
+                        if(!$(ui.draggable).hasClass('item'))
+                            return;
+                        
+                        // unselect item if item is dragged out
+                        $(this).removeClass('window-sidebar-item-drag-active');
+                        $('.ui-draggable-dragging').css('opacity', 'initial')
+                        $('.item-selected-clone').css('opacity', 'initial')
+            
+                        $('.item-container').droppable( 'enable' )    
+                    }
+                });
+            }).catch(function(err){
+                console.error(err);
+            })
+        }
+
         // get directory content
         refresh_item_container(el_window_body, options);
     }
@@ -1191,7 +1334,7 @@ async function UIWindow(options) {
                         writeURL: item.write_url,
                         metadataURL: item.metadata_url,
                         isDirectory: item.fsentry_is_dir,
-                        path: `~/` + item.path.split('/').slice(2).join('/'),
+                        path: privacy_aware_path(item.path),
                         uid: item.uid,
                     })
                 }
@@ -1243,6 +1386,40 @@ async function UIWindow(options) {
                 if(source_item !== null){
                     items_to_move.push(source_item);
                 }
+            }
+
+            // --------------------------------------------------------
+            // if this is the home directory of another user, show the sharing dialog
+            // --------------------------------------------------------
+            let cur_path = $(el_window).attr('data-path');
+            if(window.countSubstr(cur_path, '/') === 1 && cur_path !== '/'+window.user.username){
+                let username = cur_path.split('/')[1];
+
+                const items_to_share = []
+                        
+                // first item
+                items_to_share.push({
+                    uid: $(ui.draggable).attr('data-uid'),
+                    path: $(ui.draggable).attr('data-path'),
+                    icon: $(ui.draggable).find('.item-icon img').attr('src'),
+                    name: $(ui.draggable).find('.item-name').text(),
+                }); 
+                
+                // all subsequent items
+                const cloned_items = document.getElementsByClassName('item-selected-clone');
+                for(let i =0; i<cloned_items.length; i++){
+                    const source_item = document.getElementById('item-' + $(cloned_items[i]).attr('data-id'));
+                    if(!source_item) continue;
+                    items_to_share.push({
+                        uid: $(source_item).attr('data-uid'),
+                        path: $(source_item).attr('data-path'),
+                        icon: $(source_item).find('.item-icon img').attr('src'),
+                        name: $(source_item).find('.item-name').text(),
+                    })
+                }
+    
+                UIWindowShare(items_to_share, username);
+                return;
             }
 
             // If ctrl key is down, copy items. Except if target is Trash
@@ -1715,6 +1892,7 @@ async function UIWindow(options) {
             minWidth: 200,
             minHeight: 200,
             start: function(){
+                window.a_window_is_resizing = true;
                 $(el_window_app_iframe).css('pointer-events', 'none');
                 $('.window').css('pointer-events', 'none');
             },
@@ -1746,6 +1924,7 @@ async function UIWindow(options) {
                 }
             },
             stop: function () {
+                window.a_window_is_resizing = false;
                 $(el_window_app_iframe).css('pointer-events', 'all');
                 $('.window').css('pointer-events', 'initial');
                 $(el_window_sidebar).resizable("option", "maxWidth", el_window.getBoundingClientRect().width/2);
@@ -1761,6 +1940,9 @@ async function UIWindow(options) {
         })
     }
 
+    // --------------------------------------------------------
+    // Sidebar Resizable
+    // --------------------------------------------------------
     let side = $(el_window).find('.window-sidebar')
     side.resizable({
         handles: "e,w",
@@ -1775,7 +1957,7 @@ async function UIWindow(options) {
             $('.window').css('pointer-events', 'initial');
             const new_width = $(el_window_sidebar).width();
             // save new width in the cloud, to user's settings
-            window.setItem({key: "window_sidebar_width", value: new_width});
+            puter.kv.set({key: "window_sidebar_width", value: new_width});
             // save new width locally, to window object
             window.window_sidebar_width = new_width;
         }
@@ -2038,7 +2220,7 @@ async function UIWindow(options) {
                             html: i18n('deploy_as_app'),
                             disabled: !options.is_dir,
                             onClick: async function () {
-                                window.launch_app({
+                                launch_app({
                                     name: 'dev-center',
                                     file_path: $(el_window).attr('data-path'),
                                     file_uid: $(el_window).attr('data-uid'),
@@ -2168,7 +2350,7 @@ async function UIWindow(options) {
         setTimeout(function(){
             window.enter_fullpage_mode(el_window);
             $(el_window).show()
-        }, 5);
+        }, 50);
     }
 
     return el_window;
@@ -2185,8 +2367,7 @@ function delete_window_element (el_window){
     // resetting window counter is important so that next window opens at the center of the screen
     if($('.window').length === 0)
         window.window_counter = 0;
-}    
-
+}
 
 $(document).on('click', '.window-sidebar-item', async function(e){
     const el_window = $(this).closest('.window');
@@ -2198,7 +2379,7 @@ $(document).on('click', '.window-sidebar-item', async function(e){
         UIWindow({
             path: item_path,
             title: path.basename(item_path),
-            icon: await window.item_icon({is_dir: true, path: item_path}),
+            icon: await item_icon({is_dir: true, path: item_path}),
             // todo
             // uid: $(el_item).attr('data-uid'),
             is_dir: true,
@@ -2260,7 +2441,7 @@ $(document).on('contextmenu taphold', '.window-sidebar-item', function(event){
                     UIWindow({
                         path: item_path,
                         title: path.basename(item_path),
-                        icon: await window.item_icon({is_dir: true, path: item_path}),
+                        icon: await item_icon({is_dir: true, path: item_path}),
                         // todo
                         // uid: $(el_item).attr('data-uid'),
                         is_dir: true,
@@ -2651,6 +2832,9 @@ window.update_window_path = async function(el_window, target_path){
         }else if (target_path === window.docs_path){
             $(el_window).find('.window-head-icon').attr('src', window.icons['folder-documents.svg']);
             $(el_window).find('.window-head-title').text('Documents')
+        }else if (target_path === window.public_path){
+            $(el_window).find('.window-head-icon').attr('src', window.icons['folder-public.svg']);
+            $(el_window).find('.window-head-title').text('Public')
         }else if (target_path === window.videos_path){
             $(el_window).find('.window-head-icon').attr('src', window.icons['folder-videos.svg']);
             $(el_window).find('.window-head-title').text('Videos')
@@ -2807,13 +2991,21 @@ $.fn.close = async function(options) {
     $(this).each(async function() {
         const el_iframe = $(this).find('.window-app-iframe');
         const app_uses_sdk = el_iframe.length > 0 && el_iframe.attr('data-appUsesSDK') === 'true';
-        // tell child app that this window is about to close, get its response
+
         if(app_uses_sdk){
+            // get appInstanceID
+            const appInstanceID = el_iframe.closest('.window').attr('data-element_uuid');
+            // tell child app that this window is about to close, get its response
             if(!options.bypass_iframe_messaging){
                 const resp = await window.sendWindowWillCloseMsg(el_iframe.get(0));
                 if(!resp.msg){
                     return false;
                 }
+            }
+            // remove the menubar from the window.menubars array
+            if(appInstanceID){
+                delete window.menubars[appInstanceID];
+                window.app_instance_ids.delete(appInstanceID);
             }
         }
 
@@ -2887,10 +3079,14 @@ $.fn.close = async function(options) {
             $(`.window[data-parent_uuid="${window_uuid}"]`).close();
 
             // notify other apps that we're closing
-            window.report_app_closed(window_uuid);
+            window.report_app_closed(window_uuid, options.status_code ?? 0);
 
             // remove backdrop
             $(this).closest('.window-backdrop').remove();
+
+            // remove global menubars
+            $(`.window-menubar-global[data-window-id="${win_id}"]`).remove();
+
             // remove DOM element
             if(options?.shrink_to_target){
                 // get target location
@@ -3106,7 +3302,7 @@ $.fn.showWindow = async function(options) {
     return this;
 };
 
-window.show_or_hide_empty_folder_message = function(el_item_container){
+window.toggle_empty_folder_message = function(el_item_container){
     // if the item container is the desktop, don't show/hide the empty message
     if($(el_item_container).hasClass('desktop'))
         return;
@@ -3124,9 +3320,10 @@ window.show_or_hide_empty_folder_message = function(el_item_container){
 $.fn.focusWindow = function(event) {
     if(this.hasClass('window')){
         const $app_iframe = $(this).find('.window-app-iframe');
+        const win_id = $(this).attr('data-id');
         $('.window').not(this).removeClass('window-active');
         $(this).addClass('window-active');
-        // disable pointer events on all other windows' iframes, except for this window's iframe
+        // disable pointer events on all windows' iframes, except for this window's iframe
         $('.window-app-iframe').not($app_iframe).css('pointer-events', 'none');
         // bring this window to front, only if it's not stay_on_top
         if($(this).attr('data-stay_on_top') !== 'true'){
@@ -3140,9 +3337,21 @@ $.fn.focusWindow = function(event) {
         if($(this).attr('data-element_uuid') !== 'null'){
             $(`.window[data-parent_uuid="${$(this).attr('data-element_uuid')}"]`).css('z-index', ++window.last_window_zindex);
         }
-        //
-        // if this has an iframe, focus on it
-        if(!$(this).hasClass('window-disabled') && $app_iframe.length > 0){
+
+        // hide other global menubars
+        $('.window-menubar-global').not(`.window-menubar-global[data-window-id="${win_id}"]`).hide();
+        // show this window's global menubar
+        $(`.window-menubar-global[data-window-id="${win_id}"]`).show();
+
+        // if a menubar or any of its items are clicked, don't focus the iframe. This is important to preserve the focus on the menubar
+        // and to enable keyboard navigation through the menubar items
+        if($(event?.target).hasClass('window-menubar') || $(event?.target).closest('.window-menubar').length > 0){
+            $($app_iframe).css('pointer-events', 'none');
+            $app_iframe.get(0)?.blur();
+            $app_iframe.get(0)?.contentWindow?.blur();
+        }
+        // if this has an iframe
+        else if(!$(this).hasClass('window-disabled') && $app_iframe.length > 0){
             $($app_iframe).css('pointer-events', 'all');
             $app_iframe.get(0)?.focus({preventScroll:true});
             $app_iframe.get(0)?.contentWindow?.focus({preventScroll:true});

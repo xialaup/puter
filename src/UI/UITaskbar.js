@@ -19,6 +19,7 @@
 
 import UITaskbarItem from './UITaskbarItem.js'
 import UIPopover from './UIPopover.js'
+import launch_app from "../helpers/launch_app.js"
 
 async function UITaskbar(options){
     window.global_element_id++;
@@ -89,7 +90,7 @@ async function UITaskbar(options){
             
             let apps_str = '';
 
-            apps_str += `<div style="margin-bottom: 10px; padding: 5px; position: relative;">`
+            apps_str += `<div class="launch-search-wrapper">`
                 apps_str += `<input style="background-image:url(${window.icons['magnifier-outline.svg']});" class="launch-search">`;
                 apps_str += `<img class="launch-search-clear" src="${window.icons['close.svg']}">`;
             apps_str += `</div>`;
@@ -175,7 +176,7 @@ async function UITaskbar(options){
         onClick: function(){
             let open_window_count = parseInt($(`.taskbar-item[data-app="explorer"]`).attr('data-open-windows'));
             if(open_window_count === 0){
-                window.launch_app({ name: 'explorer', path: window.home_path});
+                launch_app({ name: 'explorer', path: window.home_path});
             }else{
                 return false;
             }
@@ -197,7 +198,7 @@ async function UITaskbar(options){
                 onClick: function(){
                     let open_window_count = parseInt($(`.taskbar-item[data-app="${app_info.name}"]`).attr('data-open-windows'));
                     if(open_window_count === 0){
-                        window.launch_app({
+                        launch_app({
                             name: app_info.name,
                         }) 
                     }else{
@@ -226,7 +227,7 @@ async function UITaskbar(options){
         onClick: function(){
             let open_windows = $(`.window[data-path="${html_encode(window.trash_path)}"]`);
             if(open_windows.length === 0){
-                window.launch_app({ name: 'explorer', path: window.trash_path});
+                launch_app({ name: 'explorer', path: window.trash_path});
             }else{
                 open_windows.focusWindow();
             }
@@ -279,7 +280,7 @@ window.make_taskbar_sortable = function(){
                     onClick: function(){
                         let open_window_count = parseInt($(`.taskbar-item[data-app="${$(ui.item).attr('data-app-name')}"]`).attr('data-open-windows'));
                         if(open_window_count === 0){
-                            window.launch_app({
+                            launch_app({
                                 name: $(ui.item).attr('data-app-name'),
                             }) 
                         }else{

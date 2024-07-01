@@ -130,7 +130,21 @@ If this was not you, please contact support@puter.com immediately.
         <p>Sincerely,</p>
         <p>Puter</p>
         `
-    }
+    },
+    // TODO: revise email contents
+    'share_existing_user': {
+        subject: 'Puter share from {{susername}}',
+        html: `
+        <p>Hi there {{rusername}},</p>
+        <p>{{link}}</p>
+        <p>Sincerely,</p>
+        <p>Puter</p>
+        `
+    },
+    'share_by_email': {
+        subject: 'share by email',
+        html: `testing: {{link}}`
+    },
 }
 
 class Emailservice extends BaseService {
@@ -161,7 +175,6 @@ class Emailservice extends BaseService {
     }
 
     _init () {
-        console.log('the config', this.config);
     }
 
     get_transport_ () {

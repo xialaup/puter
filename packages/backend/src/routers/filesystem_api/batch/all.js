@@ -27,6 +27,7 @@ const { BatchExecutor } = require("../../../filesystem/batch/BatchExecutor");
 const { TeePromise } = require("../../../util/promise");
 const { EWMA, MovingMode } = require("../../../util/opmath");
 const { get_app } = require('../../../helpers');
+const { valid_file_size } = require("../../../util/validutil");
 
 const commands = require('../../../filesystem/batch/commands.js').commands;
 
@@ -141,17 +142,13 @@ module.exports = eggspress('/batch', {
             return;
         }
 
-        // log fileinfos
-        console.log('HERE ARE THE FILEINFOS');
-        console.log(JSON.stringify(fileinfos, null, 2));
-
         const indexes_to_remove = [];
 
         for ( let i=0 ; i < pending_operations.length ; i++ ) {
             const op_spec = pending_operations[i];
             if ( ! operation_requires_file(op_spec) ) {
                 indexes_to_remove.push(i);
-                console.log(`EXEUCING OP ${op_spec.op}`)
+                log.info(`executing ${op_spec.op}`);
                 response_promises.push(
                     batch_exe.exec_op(req, op_spec)
                 );
@@ -192,7 +189,13 @@ module.exports = eggspress('/batch', {
             }
 
             if ( fieldname === 'fileinfo' ) {
-                fileinfos.push(JSON.parse(value));
+                const fileinfo = JSON.parse(value);
+                const { v: size, ok: size_ok } = valid_file_size(fileinfo.size);
+                if ( ! size_ok ) {
+                    throw APIError.create('invalid_file_metadata');
+                }
+                fileinfo.size = size;
+                fileinfos.push(fileinfo);
                 return;
             }
 
@@ -227,7 +230,6 @@ module.exports = eggspress('/batch', {
             batch_widget.ic = pending_operations.length;
             on_first_file();
         }
-        console.log(`GOT A FILE`)
 
         if ( fileinfos.length == 0 ) {
             request_errors_.push(
@@ -252,7 +254,6 @@ module.exports = eggspress('/batch', {
             stream.on('end', () => {
                 stream.destroy();
             });
-            console.log('DISCARDED A FILE');
             return;
         }
 
@@ -265,7 +266,7 @@ module.exports = eggspress('/batch', {
     });
 
     busboy.on('close', () => {
-        console.log('GOT DONE READING');
+        log.info('busboy close');
         still_reading.resolve();
     });
 
@@ -280,11 +281,11 @@ module.exports = eggspress('/batch', {
         return;
     }
 
-    log.noticeme('WAITING ON OPERATIONS')
+    log.info('waiting for operations')
     let responsePromises = response_promises;
     // let responsePromises = batch_exe.responsePromises;
     const results = await Promise.all(responsePromises);
-    log.noticeme('RESPONSE GETS SENT!');
+    log.info('sending response');
 
     frame.done();
 

@@ -17,9 +17,67 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ @font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Thin.ttf') format('truetype');
+    font-weight: 100;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-ExtraLight.ttf') format('truetype');
+    font-weight: 200;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Light.ttf') format('truetype');
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Regular.ttf') format('truetype');
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Medium.ttf') format('truetype');
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Bold.ttf') format('truetype');
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-ExtraBold.ttf') format('truetype');
+    font-weight: 800;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Black.ttf') format('truetype');
+    font-weight: 900;
+}
+
 * {
-    font-family: "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
+    font-family: "Inter", "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
     user-select: none;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "slnt"0;
+
 }
 
 :root {
@@ -744,6 +802,9 @@ span.header-sort-icon img {
     text-shadow: none;
 }
 
+.window-menubar:not(.window-menubar-global):empty {
+    display: none !important;
+}
 .window-menubar {
     display: flex;
     box-sizing: border-box;
@@ -751,7 +812,23 @@ span.header-sort-icon img {
     border-bottom: 1px solid #e3e3e3;
     background-color: #fafafa;
     --scale: 2pt;
-    padding: 0 2pt;
+    padding: 2px 5px;
+}
+
+.window-menubar-global{
+    background-color: transparent;
+    color: white;
+    border-bottom: none;
+    flex-grow: 1;
+    scale: 1;
+    --scale: 1;
+    margin-left: 15px;
+    padding: 0;
+}
+.window-menubar-global .window-menubar-item span{
+    padding: 3px 10px;
+    font-size: 13px;
+    border-radius: 3px;
 }
 
 .window-menubar-item {
@@ -766,10 +843,12 @@ span.header-sort-icon img {
     border-radius: calc(1.5 * var(--scale));
 }
 
-.window-menubar-item:hover > span,
-.window-menubar-item.active > span {
-    background-color: var(--select-color);
-    color: white;
+.window-menubar-item.active>span {
+    background-color: #e2e2e2;
+}
+
+.window-menubar-global .window-menubar-item.active>span {
+    background-color: #e4e4e43a;
 }
 
 .explorer-empty-message {
@@ -886,19 +965,17 @@ span.header-sort-icon img {
 .window-head {
     overflow: hidden !important;
     padding: 0;
-    background-color: hsla(
-        var(--window-head-hue),
-        var(--window-head-saturation),
-        var(--window-head-lightness),
-        calc(0.5 + 0.5 * var(--window-head-alpha))
-    );
+    background-color: hsla(var(--window-head-hue),
+            var(--window-head-saturation),
+            var(--window-head-lightness),
+            calc(0.5 + 0.5 * var(--window-head-alpha)));
     filter: grayscale(80%);
     box-shadow: inset 0px -4px 5px -7px rgb(0 0 0 / 64%);
     display: flex;
     flex-flow: row;
     padding-left: 5px;
     margin-bottom: -1px;
-    
+
 }
 
 .device-phone .window-head {
@@ -1093,12 +1170,10 @@ span.header-sort-icon img {
     border-right: 1px solid #CCC;
     padding: 15px 10px;
     box-sizing: border-box;
-    background-color: hsla(
-        var(--window-sidebar-hue),
-        var(--window-sidebar-saturation),
-        var(--window-sidebar-lightness),
-        calc(0.5 + 0.5*var(--window-sidebar-alpha))
-    );
+    background-color: hsla(var(--window-sidebar-hue),
+            var(--window-sidebar-saturation),
+            var(--window-sidebar-lightness),
+            calc(0.5 + 0.5*var(--window-sidebar-alpha)));
     overflow-y: scroll;
     margin-top: 1px;
 }
@@ -1453,7 +1528,7 @@ span.header-sort-icon img {
     padding: 3px 0;
     min-width: 200px;
     background-color: rgba(231, 238, 245, .98);
-    border: 1px solid #e4ebf3de;
+    border: 1px solid #e6e4e466;
     box-shadow: 0px 0px 15px #00000066;
     padding-left: 6px;
     padding-right: 6px;
@@ -1478,7 +1553,7 @@ span.header-sort-icon img {
     padding: 5px;
     list-style-type: none;
     user-select: none;
-    font-size: 13px;
+    font-size: 12px;
     height: 25px;
     box-sizing: border-box;
     position: relative;
@@ -1520,11 +1595,16 @@ span.header-sort-icon img {
     display: none;
     pointer-events: none;
 }
-
+.context-menu .has-open-context-menu-submenu,
+.context-menu .context-menu-item-active {
+    border-radius: 4px;
+}
+.context-menu .has-open-context-menu-submenu{
+    background-color: #dfdfdf;
+}
 .context-menu .context-menu-item-active {
     background-color: var(--select-color);
     color: white;
-    border-radius: 4px;
 }
 
 .context-menu .context-menu-item-active-blurred {
@@ -1561,6 +1641,9 @@ span.header-sort-icon img {
 
 .context-menu .context-menu-item-active .context-menu-item-icon-active {
     display: inline-block;
+}
+
+.context-menu .context-menu-item-active:not(.context-menu-item-disabled) .context-menu-item-icon-active {
     color: white;
 }
 
@@ -1625,7 +1708,7 @@ label {
     border: 1px solid;
     border-radius: 4px;
     height: 18px !important;
-    width: 90px !important;
+    width: 110px !important;
     margin-top: 2px;
     text-decoration: none;
     margin-left: 10px !important;
@@ -2016,9 +2099,8 @@ label {
 }
 
 .share-recipients {
-    margin-top: 10px;
     max-height: 200px;
-    overflow: scroll;
+    overflow: hidden;
 }
 
 .feedback-sent-success {
@@ -2108,12 +2190,10 @@ label {
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: hsla(
-        var(--taskbar-hue),
-        var(--taskbar-saturation),
-        var(--taskbar-lightness),
-        calc(0.5 + 0.5*var(--taskbar-alpha))
-    );
+    background-color: hsla(var(--taskbar-hue),
+            var(--taskbar-saturation),
+            var(--taskbar-lightness),
+            calc(0.5 + 0.5*var(--taskbar-alpha)));
     display: flex;
     justify-content: center;
     z-index: 99999;
@@ -2220,12 +2300,10 @@ label {
 
 @supports ((backdrop-filter: blur())) {
     .taskbar {
-        background-color: hsla(
-            var(--taskbar-hue),
-            var(--taskbar-saturation),
-            var(--taskbar-lightness),
-            var(--taskbar-alpha)
-        );
+        background-color: hsla(var(--taskbar-hue),
+                var(--taskbar-saturation),
+                var(--taskbar-lightness),
+                var(--taskbar-alpha));
         backdrop-filter: blur(10px);
     }
 
@@ -2378,19 +2456,25 @@ label {
 /*****************************************************
  * Notification
  *****************************************************/
+.notification, .notification-wrapper{
+    width: 320px;
+    border-radius: 11px;
+}
 .notification {
-    width: 250px;
-    height: 54px;
-    position: absolute;
-    right: 10px;
+    min-height: 54px;
     background: #ffffffcd;
     backdrop-filter: blur(5px);
-    border-radius: 11px;
-    z-index: 9999999;
+    z-index: 99999999;
     box-shadow: 0px 0px 17px -9px #000;
     border: 1px solid #d5d5d5;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    pointer-events: all;
 }
-
+.notification-wrapper{
+    overflow: visible;
+}
 .notification-close {
     position: absolute;
     background: white;
@@ -2407,7 +2491,67 @@ label {
 .notification:hover .notification-close {
     display: block;
 }
+.notification-icon{
+    width: 40px;
+    margin: 10px 5px 10px 15px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    filter: drop-shadow(0px 0px 0.5px rgb(51, 51, 51));
+}
+.notification-icon img{
+    width: 35px;
+    height: 35px;
+}
+.notification-title{
+    font-size: 12px;
+    font-weight: 600;
+}
+.notification-text{
+    font-size: 12px; 
+    margin-top: 4px;
+}
+.notification-content{
+    flex-grow:1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+.notification-container{
+    position: absolute;
+    top: 40px;
+    right: 10px;
+    z-index: 1000;
+    padding-top: 30px;
+    pointer-events: none;
+}
 
+.notifications-close-all{
+    opacity: 0;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background-color: #d5d9dc;
+    padding: 3px 7px;
+    border-radius: 3px;
+    border: 1px solid #d5d5d5;
+    font-size: 12px;
+    transition: 0.15s;
+    pointer-events: none;
+    cursor: pointer;
+    filter: drop-shadow(0px 0px 0.5px rgb(51, 51, 51));
+}
+.notifications-close-all:hover{
+    background-color: #dee1e3;
+}
+.notification-container.has-multiple{
+    pointer-events: all;
+}
+.notification-container.has-multiple:hover .notifications-close-all{
+    pointer-events: all;
+    opacity: 1 !important;
+}
 /*****************************************************
  * Start
  *****************************************************/
@@ -2526,14 +2670,16 @@ label {
 
 /* UIWindowEmailConfirmationRequired */
 fieldset[name=number-code] {
-    min-width: 0; /* Fix for Firefox */
+    min-width: 0;
+    /* Fix for Firefox */
     display: flex;
     justify-content: space-between;
     gap: 5px;
 }
 
 .digit-input {
-    min-width: 0; /* Fix for Firefox */
+    min-width: 0;
+    /* Fix for Firefox */
     box-sizing: border-box;
     flex-grow: 1;
     height: 50px;
@@ -2759,12 +2905,18 @@ fieldset[name=number-code] {
 
 @supports ((backdrop-filter: blur())) {
     .window-head {
-        background-color: hsla(
-            var(--window-head-hue),
-            var(--window-head-saturation),
-            var(--window-head-lightness),
-            var(--window-head-alpha)
-        );
+        background-color: hsla(var(--window-head-hue),
+                var(--window-head-saturation),
+                var(--window-head-lightness),
+                var(--window-head-alpha));
+        backdrop-filter: blur(10px);
+    }
+
+    .notification {
+        background-color: hsla(var(--window-head-hue),
+                var(--window-head-saturation),
+                var(--window-head-lightness),
+                var(--window-head-alpha));
         backdrop-filter: blur(10px);
     }
 
@@ -2775,12 +2927,10 @@ fieldset[name=number-code] {
 
     .window-sidebar {
         /* background-color: var(--puter-window-background); */
-        background-color: hsla(
-            var(--window-sidebar-hue),
-            var(--window-sidebar-saturation),
-            var(--window-sidebar-lightness),
-            var(--window-sidebar-alpha)
-        );
+        background-color: hsla(var(--window-sidebar-hue),
+                var(--window-sidebar-saturation),
+                var(--window-sidebar-lightness),
+                var(--window-sidebar-alpha));
         backdrop-filter: blur(10px);
     }
 
@@ -2875,6 +3025,15 @@ fieldset[name=number-code] {
     padding-left: 35px;
     padding-right: 35px;
     border: 2px solid #CCC;
+}
+
+.launch-search-wrapper{
+    margin-bottom: 10px; 
+    padding: 5px; 
+    position: relative;
+}
+.device-phone .launch-search-wrapper{
+    margin-top: 15px;
 }
 
 .launch-search-clear {
@@ -3532,7 +3691,7 @@ fieldset[name=number-code] {
     max-width: 500px;
 }
 
-.about-container .about{
+.about-container .about {
     text-align: center;
 }
 
@@ -3708,6 +3867,10 @@ fieldset[name=number-code] {
     height: 45px;
 }
 
+.thin-card {
+    padding: 0 15px;
+}
+
 .settings-card strong {
     font-weight: 500;
 }
@@ -3717,7 +3880,8 @@ fieldset[name=number-code] {
     background: #ffecec;
     color: rgb(215 2 2);
 }
-.settings-card-success{
+
+.settings-card-success {
     border-color: #08bf4e;
     background: #e6ffed;
     color: #03933a;
@@ -3750,22 +3914,25 @@ fieldset[name=number-code] {
     -webkit-font-smoothing: antialiased;
     color: #5f626d;
 }
-.account-deletion-confirmation-icon{
-    width: 70px; 
-    margin: 20px auto 20px; 
-    display: block; 
-    margin-bottom: 20px;
-}
-.proceed-with-user-deletion{
-    margin-bottom: 20px;
-}
-.confirm-temporary-user-deletion{
-    width: 100%; 
+
+.account-deletion-confirmation-icon {
+    width: 70px;
+    margin: 20px auto 20px;
+    display: block;
     margin-bottom: 20px;
 }
 
-.confirm-user-deletion-password{
-    width: 100%; 
+.proceed-with-user-deletion {
+    margin-bottom: 20px;
+}
+
+.confirm-temporary-user-deletion {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.confirm-user-deletion-password {
+    width: 100%;
     margin-bottom: 20px;
 }
 

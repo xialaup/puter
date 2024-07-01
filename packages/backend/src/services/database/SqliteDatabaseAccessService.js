@@ -42,7 +42,7 @@ class SqliteDatabaseAccessService extends BaseDatabaseAccessService {
         this.db = new Database(this.config.path);
 
         // Database upgrade logic
-        const TARGET_VERSION = 7;
+        const TARGET_VERSION = 16;
 
         if ( do_setup ) {
             this.log.noticeme(`SETUP: creating database at ${this.config.path}`);
@@ -55,7 +55,16 @@ class SqliteDatabaseAccessService extends BaseDatabaseAccessService {
                 '0006_update-apps.sql',
                 '0007_sessions.sql',
                 '0008_otp.sql',
-                '0009_app-prefix-fix',
+                '0009_app-prefix-fix.sql',
+                '0010_add-git-app.sql',
+                '0011_notification.sql',
+                '0012_appmetadata.sql',
+                '0013_protected-apps.sql',
+                '0014_share.sql',
+                '0015_group.sql',
+                '0016_group-permissions.sql',
+                '0017_publicdirs.sql',
+                '0018_fix-0003.sql',
             ].map(p => path_.join(__dirname, 'sqlite_setup', p));
             const fs = require('fs');
             for ( const filename of sql_files ) {
@@ -98,6 +107,42 @@ class SqliteDatabaseAccessService extends BaseDatabaseAccessService {
 
         if ( user_version <= 6 ) {
             upgrade_files.push('0009_app-prefix-fix.sql');
+        }
+
+        if ( user_version <= 7 ) {
+            upgrade_files.push('0010_add-git-app.sql');
+        }
+
+        if ( user_version <= 8 ) {
+            upgrade_files.push('0011_notification.sql');
+        }
+
+        if ( user_version <= 9 ) {
+            upgrade_files.push('0012_appmetadata.sql');
+        }
+
+        if ( user_version <= 10 ) {
+            upgrade_files.push('0013_protected-apps.sql');
+        }
+
+        if ( user_version <= 11 ) {
+            upgrade_files.push('0014_share.sql');
+        }
+
+        if ( user_version <= 12 ) {
+            upgrade_files.push('0015_group.sql');
+        }
+
+        if ( user_version <= 13 ) {
+            upgrade_files.push('0016_group-permissions.sql');
+        }
+
+        if ( user_version <= 14 ) {
+            upgrade_files.push('0017_publicdirs.sql');
+        }
+
+        if ( user_version <= 15 ) {
+            upgrade_files.push('0018_fix-0003.sql');
         }
 
         if ( upgrade_files.length > 0 ) {
@@ -163,22 +208,13 @@ class SqliteDatabaseAccessService extends BaseDatabaseAccessService {
         query = this.sqlite_transform_query_(query);
         params = this.sqlite_transform_params_(params);
 
-        try {
-            const stmt = this.db.prepare(query);
-            const info = stmt.run(...params);
+        const stmt = this.db.prepare(query);
+        const info = stmt.run(...params);
 
-            return {
-                insertId: info.lastInsertRowid,
-                anyRowsAffected: info.changes > 0,
-            };
-        } catch ( e ) {
-            console.error(e);
-            console.log('everything', {
-                query, params,
-            })
-            console.log(params.map(p => typeof p));
-            // throw e;
-        }
+        return {
+            insertId: info.lastInsertRowid,
+            anyRowsAffected: info.changes > 0,
+        };
     }
 
     async _batch_write (entries) {

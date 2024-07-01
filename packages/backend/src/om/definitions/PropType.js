@@ -24,7 +24,7 @@ class PropType extends AdvancedBase {
         new WeakConstructorTrait(),
     ]
 
-    static create (context, data) {
+    static create (context, data, k) {
         const chains = {};
         const super_type = data.from && (() => {
             const registry = context.get('registry');
@@ -51,7 +51,7 @@ class PropType extends AdvancedBase {
         }
 
         return new PropType({
-            chains,
+            chains, name: k,
         });
     }
 
@@ -127,8 +127,6 @@ class PropType extends AdvancedBase {
 
     async is_set (value) {
         const is_setters = this.chains.is_set || [];
-
-        console.log('IS SETTERS', is_setters)
 
         for ( const is_setter of is_setters ) {
             const result = await is_setter(value);

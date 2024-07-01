@@ -16,12 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { Component, defineComponent } from "../../util/Component.js";
+
+const Component = use('util.Component');
 
 /**
  * Slider: A labeled slider input.
  */
-export default class Slider extends Component {
+export default def(class Slider extends Component {
+    static ID = 'ui.component.Slider';
+
     static PROPERTIES = {
         name: { value: null },
         label: { value: null },
@@ -72,22 +75,27 @@ export default class Slider extends Component {
     `;
 
     create_template ({ template }) {
-        const min = this.get('min');
-        const max = this.get('max');
-        const value = this.get('value') ?? min;
-        const step = this.get('step') ?? 1;
         const label = this.get('label') ?? this.get('name');
 
         $(template).html(/*html*/`
             <div class="slider">
                 <label class="slider-label">${html_encode(label)}</label>
-                <input class="slider-input" type="range" min="${min}" max="${max}" value="${value}" step="${step}">
+                <input class="slider-input" type="range">
             </div>
         `);
     }
 
     on_ready ({ listen }) {
         const input = this.dom_.querySelector('.slider-input');
+
+        // Set attributes here to prevent XSS injection
+        {
+            const min = this.get('min');
+            input.setAttribute('min', min);
+            input.setAttribute('max', this.get('max'));
+            input.setAttribute('step', this.get('step') ?? 1);
+            input.value = this.get('value') ?? min;
+        }
 
         input.addEventListener('input', e => {
             const on_change = this.get('on_change');
@@ -103,6 +111,4 @@ export default class Slider extends Component {
             input.value = value;
         });
     }
-}
-
-defineComponent('c-slider', Slider);
+});

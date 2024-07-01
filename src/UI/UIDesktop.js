@@ -37,13 +37,16 @@ import changeLanguage from "../i18n/i18nChangeLanguage.js"
 import UIWindowSettings from "./Settings/UIWindowSettings.js"
 import UIWindowTaskManager from "./UIWindowTaskManager.js"
 import truncate_filename from '../helpers/truncate_filename.js';
+import UINotification from "./UINotification.js"
+import launch_app from "../helpers/launch_app.js"
+import item_icon from "../helpers/item_icon.js"
 
 async function UIDesktop(options){
     let h = '';
 
     // connect socket.
     window.socket = io(window.gui_origin + '/', {
-        query: {
+        auth: {
             auth_token: window.auth_token
         }
     });
@@ -109,6 +112,67 @@ async function UIDesktop(options){
         if(msg.is_empty)
             $(`.window[data-path="${html_encode(window.trash_path)}" i]`).find('.item-container').empty();
     })
+    
+    window.socket.on('notif.message', ({ uid, notification }) => {
+        const icon = window.icons[notification.icon];
+        UINotification({
+            title: notification.title,
+            text: notification.text,
+            icon: icon,
+            value: notification,
+            close: async () => {
+                await fetch(`${window.api_origin}/notif/mark-ack`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${puter.authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ uid }),
+                });
+            },
+            click: async (notif) => {
+                if(notification.template === "file-shared-with-you"){
+                    let item_path = '/' + notification.fields.username;
+                    UIWindow({
+                        path: '/' + notification.fields.username,
+                        title: path.basename(item_path),
+                        icon: await item_icon({is_dir: true, path: item_path}),
+                        is_dir: true,
+                        app: 'explorer',
+                    });
+                }
+            },
+        });
+    });
+
+    window.__already_got_unreads = false;
+    window.socket.on('notif.unreads', ({ unreads }) => {
+        if ( window.__already_got_unreads ) return;
+        window.__already_got_unreads = true;
+
+        for ( const notif_info of unreads ) {
+            const notification = notif_info.notification;
+            const icon = window.icons[notification.icon];
+            
+            UINotification({
+                icon,
+                title: notification.title,
+                text: notification.text ?? notification.title,
+                close: async () => {
+                    await fetch(`${window.api_origin}/notif/mark-ack`, {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${puter.authToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            uid: notif_info.uid,
+                        }),
+                    });
+                },
+            });
+        }
+    });
 
     window.socket.on('app.opened', async (app) => {
         // don't update if this is the original client that initiated the action
@@ -154,7 +218,7 @@ async function UIDesktop(options){
         $(`.item[data-uid='${html_encode(item.uid)}'] .item-name`).html(html_encode(truncate_filename(item.name)).replaceAll(' ', '&nbsp;'));
 
         // Set new icon
-        const new_icon = (item.is_dir ? window.icons['folder.svg'] : (await window.item_icon(item)).image);
+        const new_icon = (item.is_dir ? window.icons['folder.svg'] : (await item_icon(item)).image);
         $(`.item[data-uid='${item.uid}']`).find('.item-icon-thumb').attr('src', new_icon);
         $(`.item[data-uid='${item.uid}']`).find('.item-icon-icon').attr('src', new_icon);
 
@@ -275,7 +339,7 @@ async function UIDesktop(options){
             immutable: fsentry.immutable,
             uid: fsentry.uid,
             path: fsentry.path,
-            icon: await window.item_icon(fsentry),
+            icon: await item_icon(fsentry),
             name: (dest_path === window.trash_path) ? metadata.original_name : fsentry.name,
             is_dir: fsentry.is_dir,
             size: fsentry.size,
@@ -303,7 +367,7 @@ async function UIDesktop(options){
                         immutable: false,
                         uid: dir.uid,
                         path: dir.path,
-                        icon: await window.item_icon(dir),
+                        icon: await item_icon(dir),
                         name: dir.name,
                         size: dir.size,
                         type: dir.type,
@@ -358,7 +422,7 @@ async function UIDesktop(options){
         $(`.item[data-uid='${html_encode(item.uid)}'] .item-name`).html(html_encode(truncate_filename(item.name)).replaceAll(' ', '&nbsp;'));
 
         // Set new icon
-        const new_icon = (item.is_dir ? window.icons['folder.svg'] : (await window.item_icon(item)).image);
+        const new_icon = (item.is_dir ? window.icons['folder.svg'] : (await item_icon(item)).image);
         $(`.item[data-uid='${item.uid}']`).find('.item-icon-icon').attr('src', new_icon);
 
         // Set new data-name
@@ -435,7 +499,7 @@ async function UIDesktop(options){
                 'data-type': item.type,
             })
             // set new icon
-            const new_icon = (item.is_dir ? window.icons['folder.svg'] : (await window.item_icon(item)).image);
+            const new_icon = (item.is_dir ? window.icons['folder.svg'] : (await item_icon(item)).image);
             $(`.item[data-uid="${item.overwritten_uid}"]`).find('.item-icon > img').attr('src', new_icon);
             
             //sort each window
@@ -450,7 +514,7 @@ async function UIDesktop(options){
                 immutable: item.immutable,
                 associated_app_name: item.associated_app?.name,
                 path: item.path,
-                icon: await window.item_icon(item),
+                icon: await item_icon(item),
                 name: item.name,
                 size: item.size,
                 type: item.type,
@@ -490,16 +554,36 @@ async function UIDesktop(options){
     h += `</div>`;
 
     // Get window sidebar width
-    window.getItem({
-        key: "window_sidebar_width",
-        success: async function(res){
-            let value = parseInt(res.value);
-            // if value is a valid number
-            if(!isNaN(value) && value > 0){
-                window.window_sidebar_width = value;
-            }
+    puter.kv.get('window_sidebar_width').then(async (val) => {
+        let value = parseInt(val);
+        // if value is a valid number
+        if(!isNaN(value) && value > 0){
+            window.window_sidebar_width = value;
         }
     })
+
+    // Get menubar style
+    puter.kv.get('menubar_style').then(async (val) => {
+        let value = val;
+        if(value === 'system' || value === 'desktop' || value === 'window'){
+            window.menubar_style = value;
+        }else{
+            window.menubar_style = 'system';
+        }
+
+        if(window.menubar_style === 'system'){
+            if(window.detectHostOS() === 'macos')
+                window.menubar_style = 'desktop';
+            else
+                window.menubar_style = 'window';
+        }
+
+        // set menubar style class to body
+        if(window.menubar_style === 'desktop'){
+            $('body').addClass('menubar-style-desktop');
+        }
+    })
+
 
     // Remove `?ref=...` from navbar URL
     if(window.url_query_params.has('ref')){
@@ -894,6 +978,7 @@ async function UIDesktop(options){
     ht += `<div class="toolbar"  style="height:${window.toolbar_height}px;">`;
         // logo
         ht += `<div class="toolbar-btn toolbar-puter-logo" title="Puter" style="margin-left: 10px; margin-right: auto;"><img src="${window.icons['logo-white.svg']}" draggable="false" style="display:block; width:17px; height:17px"></div>`;
+
         // create account button
         ht += `<div class="toolbar-btn user-options-create-account-btn ${window.user.is_temp ? '' : 'hidden' }" style="padding:0; opacity:1;" title="Save Account">`;
             ht += `<svg style="width: 17px; height: 17px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="48px" height="48px" viewBox="0 0 48 48"><g transform="translate(0, 0)"><path d="M45.521,39.04L27.527,5.134c-1.021-1.948-3.427-2.699-5.375-1.679-.717,.376-1.303,.961-1.679,1.679L2.479,39.04c-.676,1.264-.635,2.791,.108,4.017,.716,1.207,2.017,1.946,3.42,1.943H41.993c1.403,.003,2.704-.736,3.42-1.943,.743-1.226,.784-2.753,.108-4.017ZM23.032,15h1.937c.565,0,1.017,.467,1,1.031l-.438,14c-.017,.54-.459,.969-1,.969h-1.062c-.54,0-.983-.429-1-.969l-.438-14c-.018-.564,.435-1.031,1-1.031Zm.968,25c-1.657,0-3-1.343-3-3s1.343-3,3-3,3,1.343,3,3-1.343,3-3,3Z" fill="#ffbb00"></path></g></svg>`;
@@ -901,7 +986,7 @@ async function UIDesktop(options){
 
         // 'show desktop'
         if(window.is_fullpage_mode){
-            ht += `<a href="/" class="show-desktop-btn toolbar-btn antialiased" target="_blank" title="Open Desktop">Open Desktop</a>`;
+            ht += `<a href="/" class="show-desktop-btn toolbar-btn antialiased" target="_blank" title="Show Desktop">Show Desktop <img src="${window.icons['launch-white.svg']}" style="width: 15px; height: 15px; margin-left: 5px;"></a>`;
         }
 
         // refer
@@ -928,6 +1013,9 @@ async function UIDesktop(options){
     // prepend toolbar to desktop
     $(ht).insertBefore(el_desktop);
 
+    // notification container
+    $('body').append(`<div class="notification-container"><div class="notifications-close-all">Close all</div></div>`);
+
     // adjust window container to take into account the toolbar height
     $('.window-container').css('top', window.toolbar_height);
 
@@ -944,7 +1032,7 @@ async function UIDesktop(options){
             UIWindow({
                 path: predefined_path,
                 title: path.basename(predefined_path),
-                icon: await window.item_icon({is_dir: true, path: predefined_path}),
+                icon: await item_icon({is_dir: true, path: predefined_path}),
                 // todo
                 // uid: $(el_item).attr('data-uid'),
                 is_dir: true,
@@ -960,8 +1048,9 @@ async function UIDesktop(options){
     else if(window.app_launched_from_url){
         let qparams = new URLSearchParams(window.location.search);      
         if(!qparams.has('c')){
-            window.launch_app({
-                name: window.app_launched_from_url,
+            launch_app({
+                app: window.app_launched_from_url.name,
+                app_obj: window.app_launched_from_url,
                 readURL: qparams.get('readURL'),
                 maximized: qparams.get('maximized'),
                 params: window.app_query_params ?? [],
@@ -987,6 +1076,8 @@ async function UIDesktop(options){
     $(el_desktop).on('click', function(e){
         // blur all windows
         $('.window-active').removeClass('window-active');
+        // hide all global menubars
+        $('.window-menubar-global').hide();
     })  
 
     function display_ct() {
@@ -1018,21 +1109,40 @@ async function UIDesktop(options){
 
     // show referral notice window
     if(window.show_referral_notice && !window.user.email_confirmed){
-        window.getItem({
-            key: "shown_referral_notice",
-            success: async function(res){
-                if(!res){
-                    setTimeout(() => {
-                        UIWindowClaimReferral();
-                    }, 1000);
-                    window.setItem({
-                        key: "shown_referral_notice",
-                        value: true,
-                    })
-                }
+        puter.kv.get('shown_referral_notice').then(async (val) => {
+            if(!val || val === 'false' || val === false){
+                setTimeout(() => {
+                    UIWindowClaimReferral();
+                }, 1000);
+                puter.kv.set({
+                    key: "shown_referral_notice",
+                    value: true,
+                })
             }
         })
     }
+
+    // fetch notifications
+    fetch(puter.APIOrigin + "/drivers/call", {
+        "headers": {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${puter.authToken}`,
+        },
+        "body": JSON.stringify({
+            interface: 'puter-notifications',
+            method: 'select',
+            args: {}
+        }),
+        "method": "POST",
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data && data.result && data.result.length > 0){
+            data.data?.forEach(notification => {
+                UINotification(notification);
+            })
+        }
+    })
 }
 
 $(document).on('contextmenu taphold', '.taskbar', function(event){
@@ -1251,7 +1361,7 @@ $(document).on('click', '.user-options-menu-btn', async function(e){
                 }
             },
         ]
-    });    
+    }); 
 })
 
 $(document).on('click', '.fullscreen-btn', async function (e) {
@@ -1302,7 +1412,7 @@ $(document).on('click', '.refer-btn', async function(e){
 })
 
 $(document).on('click', '.start-app', async function(e){
-    window.launch_app({
+    launch_app({
         name: $(this).attr('data-app-name')
     })
     // close popovers

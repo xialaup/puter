@@ -41,13 +41,12 @@ const WHOAMI_GET = eggspress('/whoami', {
 
     const is_user = actor.type instanceof UserActorType;
 
-    console.log('user?', req.user);
-
     // send user object
     const details = {
         username: req.user.username,
         uuid: req.user.uuid,
         email: req.user.email,
+        unconfirmed_email: req.user.email,
         email_confirmed: req.user.email_confirmed,
         requires_email_confirmation: req.user.requires_email_confirmation,
         desktop_bg_url: req.user.desktop_bg_url,
@@ -59,6 +58,11 @@ const WHOAMI_GET = eggspress('/whoami', {
         otp: !! req.user.otp_enabled,
         ...(req.new_token ? { token: req.token } : {})
     };
+
+    // Get whoami values from other services
+    const svc_whoami = req.services.get('whoami');
+    const provider_details = await svc_whoami.get_details({ user: req.user });
+    Object.assign(details, provider_details);
 
     if ( ! is_user ) {
         // When apps call /whoami they should not see these attributes

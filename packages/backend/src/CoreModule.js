@@ -17,6 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 const { AdvancedBase } = require("@heyputer/puter-js-common");
+const { NotificationES } = require("./om/entitystorage/NotificationES");
+const { ProtectedAppES } = require("./om/entitystorage/ProtectedAppES");
 const { Context } = require('./util/context');
 
 
@@ -24,7 +26,8 @@ class CoreModule extends AdvancedBase {
     async install (context) {
         const services = context.get('services');
         const app = context.get('app');
-        await install({ services, app });
+        const useapi = context.get('useapi');
+        await install({ services, app, useapi });
     }
 
     // Some services were created before the BaseService
@@ -40,8 +43,24 @@ class CoreModule extends AdvancedBase {
 
 module.exports = CoreModule;
 
-const install = async ({ services, app }) => {
+const install = async ({ services, app, useapi }) => {
     const config = require('./config');
+
+    useapi.withuse(() => {
+        def('Service', require('./services/BaseService'));
+        def('Module', AdvancedBase);
+
+        def('puter.middlewares.auth', require('./middleware/auth2'));
+    });
+    
+    // === LIBRARIES ===
+    const ArrayUtil = require('./libraries/ArrayUtil');
+    services.registerService('util-array', ArrayUtil);
+    
+    const LibTypeTagged = require('./libraries/LibTypeTagged');
+    services.registerService('lib-type-tagged', LibTypeTagged);
+    
+    // === SERVICES ===
 
     // /!\ IMPORTANT /!\
     // For new services, put the import immediate above the
@@ -81,6 +100,8 @@ const install = async ({ services, app }) => {
     const SubdomainES = require('./om/entitystorage/SubdomainES');
     const { MaxLimitES } = require('./om/entitystorage/MaxLimitES');
     const { AppLimitedES } = require('./om/entitystorage/AppLimitedES');
+    const { ReadOnlyES } = require('./om/entitystorage/ReadOnlyES');
+    const { OwnerLimitedES } = require('./om/entitystorage/OwnerLimitedES');
     const { ESBuilder } = require('./om/entitystorage/ESBuilder');
     const { Eq, Or } = require('./om/query/query');
     const { TrackSpendingService } = require('./services/TrackSpendingService');
@@ -142,9 +163,20 @@ const install = async ({ services, app }) => {
             WriteByOwnerOnlyES,
             ValidationES,
             SetOwnerES,
-            MaxLimitES, { max: 50 },
+            ProtectedAppES,
+            MaxLimitES, { max: 5000 },
         ]),
     });
+
+    const { ParameterService } = require('./services/ParameterService');
+    services.registerService('params', ParameterService);
+
+    const { InformationService } = require('./services/information/InformationService');
+    services.registerService('information', InformationService)
+    
+    const { FilesystemService } = require('./filesystem/FilesystemService');
+    services.registerService('filesystem', FilesystemService);
+
     services.registerService('es:subdomain', EntityStoreService, {
         entity: 'subdomain',
         upstream: ESBuilder.create([
@@ -154,9 +186,20 @@ const install = async ({ services, app }) => {
             WriteByOwnerOnlyES,
             ValidationES,
             SetOwnerES,
-            MaxLimitES, { max: 50 },
+            MaxLimitES, { max: 5000 },
         ]),
     });
+    services.registerService('es:notification', EntityStoreService, {
+        entity: 'notification',
+        upstream: ESBuilder.create([
+            SQLES, { table: 'notification', debug: true },
+            NotificationES,
+            OwnerLimitedES,
+            ReadOnlyES,
+            SetOwnerES,
+            MaxLimitES, { max: 200 },
+        ]),
+    })
     services.registerService('rate-limit', RateLimitService);
     services.registerService('monthly-usage', MonthlyUsageService);
     services.registerService('auth', AuthService);
@@ -210,13 +253,53 @@ const install = async ({ services, app }) => {
 
     const { AntiCSRFService } = require('./services/auth/AntiCSRFService');
     services.registerService('anti-csrf', AntiCSRFService);
+
+    const { LockService } = require('./services/LockService');
+    services.registerService('lock', LockService);
+
+    const { PuterHomepageService } = require('./services/PuterHomepageService');
+    services.registerService('puter-homepage', PuterHomepageService);
+
+    const { GetUserService } = require('./services/GetUserService');
+    services.registerService('get-user', GetUserService);
+
+    const { DetailProviderService } = require('./services/DetailProviderService');
+    services.registerService('whoami', DetailProviderService);
+
+    const { DevTODService } = require('./services/DevTODService');
+    services.registerService('__dev-tod', DevTODService);
+
+    const { DriverService } = require("./services/drivers/DriverService");
+    services.registerService('driver', DriverService);
+
+    const { ScriptService } = require('./services/ScriptService');
+    services.registerService('script', ScriptService);
+    
+    const { BroadcastService } = require('./services/BroadcastService');
+    services.registerService('broadcast', BroadcastService);
+    
+    const { NotificationService } = require('./services/NotificationService');
+    services.registerService('notification', NotificationService);
+
+    const { ProtectedAppService } = require('./services/ProtectedAppService');
+    services.registerService('__protected-app', ProtectedAppService);
+
+    const { ShareService } = require('./services/ShareService');
+    services.registerService('share', ShareService);
+    
+    const { GroupService } = require('./services/auth/GroupService');
+    services.registerService('group', GroupService);
+    
+    const { PermissionAPIService } = require('./services/PermissionAPIService');
+    services.registerService('__permission-api', PermissionAPIService);
+
+    const { MountpointService } = require('./services/MountpointService');
+    services.registerService('mountpoint', MountpointService);
 }
 
 const install_legacy = async ({ services }) => {
     const { ProcessEventService } = require('./services/runtime-analysis/ProcessEventService');
-    const { ParameterService } = require('./services/ParameterService');
-    const { InformationService } = require('./services/information/InformationService');
-    const { FilesystemService } = require('./filesystem/FilesystemService');
+    // const { FilesystemService } = require('./filesystem/FilesystemService');
     const PerformanceMonitor = require('./monitor/PerformanceMonitor');
     const { OperationTraceService } = require('./services/OperationTraceService');
     const { WSPushService } = require('./services/WSPushService');
@@ -228,9 +311,7 @@ const install_legacy = async ({ services }) => {
 
     // === Services which do not yet extend BaseService ===
     services.registerService('process-event', ProcessEventService);
-    services.registerService('params', ParameterService);
-    services.registerService('information', InformationService)
-    services.registerService('filesystem', FilesystemService);
+    // services.registerService('filesystem', FilesystemService);
     services.registerService('operationTrace', OperationTraceService);
     services.registerService('__event-push-ws', WSPushService);
     services.registerService('referral-code', ReferralCodeService);

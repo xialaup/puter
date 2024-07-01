@@ -19,11 +19,6 @@
     <a href="https://hackerone.com/puter_h1b">Bug Bounty</a>
 </p>
 
-<p align="center">
-    <a href="https://news.ycombinator.com/item?id=39597030"><img style="width: 200px;" alt="#1 on Hacker News" src="https://hackernews-badge.vercel.app/api?id=39597030" /></a>
-    <a href="https://news.ycombinator.com/item?id=33838179"><img style="width: 200px;" alt="#1 on Hacker News" src="https://hackernews-badge.vercel.app/api?id=33838179" /></a>
-</p>
-
 <h3 align="center"><img width="700" style="border-radius:5px;" alt="screenshot" src="https://assets.puter.site/puter.com-screenshot-2.webp"></h3>
 
 <br/>
@@ -79,8 +74,8 @@ See [Configuration](#configuration) for next steps.
 
 <br/>
 
-## ⚠️ Self-Hosting ⚠️
-The self-hosted version of Puter is currently in alpha stage and should not be used in production yet. It is under active development and may contain bugs, other issues. Please exercise caution and use it for testing and evaluation purposes only.
+> [!WARNING]
+> The self-hosted version of Puter is currently in alpha stage and should not be used in production yet. It is under active development and may contain bugs, other issues. Please exercise caution and use it for testing and evaluation purposes only.
 
 ### Self-Hosting Differences
 Currently, the self-hosted version of Puter is different in a few ways from [Puter.com](https://puter.com):

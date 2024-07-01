@@ -28,6 +28,7 @@ export default [
         // Back end
         files: [
             "packages/backend/**/*.js",
+            "mods/**/*.js",
             "dev-server.js",
             "utils.js",
         ],
@@ -35,6 +36,9 @@ export default [
             globals: {
                 ...globals.node,
                 "kv": true,
+                "def": true,
+                "use": true,
+                "ll":true,
             }
         }
     },
@@ -58,6 +62,10 @@ export default [
                 "html_encode": true,
                 "html_decode": true,
                 "isMobile": true,
+                // Class Registry
+                "logger": true,
+                "def": true,
+                "use": true,
                 // Libraries
                 "saveAs": true,         // FileSaver
                 "iro": true,            // iro.js color picker
@@ -69,6 +77,30 @@ export default [
                 "io": true,             // socket.io
                 "timeago": true,        // timeago
                 "SelectionArea": true,  // viselect
+                // Puter GUI Globals
+                "set_menu_item_prop": true,
+                "determine_active_container_parent": true,
+                "privacy_aware_path": true,
+                "api_origin": true,
+                "auth_token": true,
+                "logout": true,
+                "is_email": true,
+                "select_ctxmenu_item": true,
+            }
+        }
+    },
+    {
+        // Mods
+        // NOTE: Mods have backend and frontend parts, so this just includes the globals for both.
+        files: [
+            "mods/**/*.js",
+        ],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+                "use": true,
+                "window": true,
+                "puter": true,
             }
         }
     },
