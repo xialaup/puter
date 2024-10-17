@@ -23,6 +23,7 @@ module.exports = {
     AdvancedBase,
     libs: {
         promise: require('./src/libs/promise'),
+        context: require('./src/libs/context'),
     },
     concepts: {
         Service,
