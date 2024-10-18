@@ -1,13 +1,12 @@
-<h3 align="center"><img width="80" alt="Puter.com, The Personal Cloud Computer: All your files, apps, and games in one place accessible from anywhere at any time." src="https://assets.puter.site/puter-logo.png"></h3>
+<h3 align="center"><img width="80" alt="Puter.com, The Personal Cloud Computer: మీ అన్ని ఫైల్‌లు, యాప్‌లు మరియు గేమ్‌లను ఒకే స్థలంలో ఎక్కడి నుండైనా ఎప్పుడైనా యాక్సెస్ చేయవచ్చు." src="https://assets.puter.site/puter-logo.png"></h3>
 
-<h3 align="center">The Internet OS! Free, Open-Source, and Self-Hostable.</h3>
+<h3 align="center"> ఇంటర్నెట్ OS! ఉచిత, ఓపెన్ సోర్స్, and Self-Hostable.</h3>
 
 <p align="center">
-    <img alt="test" src="https://github.com/heyPuter/puter/actions/workflows/test.yml/badge.svg">
     <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/HeyPuter/puter"> <img alt="GitHub Release" src="https://img.shields.io/github/v/release/HeyPuter/puter?label=latest%20version"> <img alt="GitHub License" src="https://img.shields.io/github/license/HeyPuter/puter">
 </p>
 <p align="center">
-    <a href="https://puter.com/"><strong>« LIVE DEMO »</strong></a>
+    <a href="https://puter.com/"><strong>« ప్రత్యక్ష ప్రదర్శన »</strong></a>
     <br />
     <br />
     <a href="https://puter.com">Puter.com</a>
@@ -29,21 +28,21 @@
 
 <br/>
 
-## Puter
+## పుటర్ (Puter)
 
-Puter is an advanced, open-source internet operating system designed to be feature-rich, exceptionally fast, and highly extensible. Puter can be used as:
+పుటర్ అనేది అధునాతన, ఓపెన్ సోర్స్ ఇంటర్నెట్ ఆపరేటింగ్ సిస్టమ్, ఇది ఫీచర్-రిచ్, అనూహ్యంగా వేగవంతమైన మరియు అత్యంత విస్తరించదగినదిగా రూపొందించబడింది. పుటర్‌ను ఇలా ఉపయోగించవచ్చు:
 
-- A privacy-first personal cloud to keep all your files, apps, and games in one secure place, accessible from anywhere at any time.
-- A platform for building and publishing websites, web apps, and games.
-- An alternative to Dropbox, Google Drive, OneDrive, etc. with a fresh interface and powerful features.
-- A remote desktop environment for servers and workstations.
-- A friendly, open-source project and community to learn about web development, cloud computing, distributed systems, and much more!
+- మీ అన్ని ఫైల్‌లు, యాప్‌లు మరియు గేమ్‌లను ఒకే సురక్షిత స్థలంలో ఉంచడానికి గోప్యత-మొదటి వ్యక్తిగత క్లౌడ్, ఎప్పుడైనా ఎక్కడి నుండైనా యాక్సెస్ చేయవచ్చు.
+- వెబ్‌సైట్‌లు, వెబ్ యాప్‌లు మరియు గేమ్‌లను రూపొందించడానికి మరియు ప్రచురించడానికి ఒక వేదిక.
+- తాజా ఇంటర్‌ఫేస్ మరియు శక్తివంతమైన ఫీచర్‌లతో Dropbox, Google Drive, OneDrive మొదలైన వాటికి ప్రత్యామ్నాయం.
+- సర్వర్లు మరియు వర్క్‌స్టేషన్‌ల కోసం రిమోట్ డెస్క్‌టాప్ వాతావరణం.
+- వెబ్ డెవలప్‌మెంట్, క్లౌడ్ కంప్యూటింగ్, డిస్ట్రిబ్యూట్ సిస్టమ్‌లు మరియు మరిన్నింటి గురించి తెలుసుకోవడానికి స్నేహపూర్వక, ఓపెన్ సోర్స్ ప్రాజెక్ట్ మరియు కమ్యూనిటీ!
 
 <br/>
 
-## Getting Started
+## ప్రారంభించడం
 
-### 💻 Local Development
+### లోకల్ డెవలప్మెంట్
 
 ```bash
 git clone https://github.com/HeyPuter/puter
@@ -52,14 +51,14 @@ npm install
 npm start
 ```
 
-This will launch Puter at http://puter.localhost:4100 (or the next available port).
+ఇది http://puter.localhost:4100 (లేదా తదుపరి అందుబాటులో ఉన్న పోర్ట్) వద్ద పుటర్‌ని ప్రారంభిస్తుంది.
 
-If this does not work, see [First Run Issues](./doc/first-run-issues.md) for
-troubleshooting steps.
+ఇది పని చేయకపోతే, దీని కోసం [మొదటి రన్ సమస్యలు](./doc/first-run-issues.md) చూడండి
+ట్రబుల్షూటింగ్ దశలు.
 
 <br/>
 
-### 🐳 Docker
+### 🐳 డోకర్
 
 ```bash
 mkdir puter && cd puter && mkdir -p puter/config puter/data && sudo chown -R 1000:1000 puter && docker run --rm -p 4100:4100 -v `pwd`/puter/config:/etc/puter -v `pwd`/puter/data:/var/puter  ghcr.io/heyputer/puter
@@ -67,9 +66,9 @@ mkdir puter && cd puter && mkdir -p puter/config puter/data && sudo chown -R 100
 
 <br/>
 
-### 🐙 Docker Compose
+### 🐙 డోకర్ Compose
 
-#### Linux/macOS
+#### లినక్స్/ macOS
 
 ```bash
 mkdir -p puter/config puter/data
@@ -80,7 +79,7 @@ docker compose up
 
 <br/>
 
-#### Windows
+#### విండోస్
 
 ```powershell
 mkdir -p puter
@@ -95,15 +94,15 @@ docker compose up
 
 ### ☁️ Puter.com
 
-Puter is available as a hosted service at [**puter.com**](https://puter.com).
+పుటర్ [**puter.com**](https://puter.com)లో హోస్ట్ చేయబడి ఉంది.
 
 <br/>
 
 ## System Requirements
 
-- **Operating Systems:** Linux, macOS, Windows
-- **RAM:** 2GB minimum (4GB recommended)
-- **Disk Space:** 1GB free space
+- **ఆపరేటింగ్ సిస్టమ్స్:** లినక్స్, macOS, విండోస్
+- **RAM:** 2GB కనీసం(4GB recommended)
+- **Disk Space:** 1GB ఖాళీ
 - **Node.js:** Version 16+ (Version 22+ recommended)
 - **npm:** Latest stable version
 
@@ -111,9 +110,9 @@ Puter is available as a hosted service at [**puter.com**](https://puter.com).
 
 ## Support
 
-Connect with the maintainers and community through these channels:
+ఈ ఛానెల్‌ల ద్వారా నిర్వాహకులు మరియు సంఘంతో కనెక్ట్ అవ్వండి:
 
-- Bug report or feature request? Please [open an issue](https://github.com/HeyPuter/puter/issues/new/choose).
+- బగ్ నివేదిక లేదా ఫీచర్ అభ్యర్థన? దయచేసి [open an issue](https://github.com/HeyPuter/puter/issues/new/choose).
 - Discord: [discord.com/invite/PQcx7Teh8u](https://discord.com/invite/PQcx7Teh8u)
 - X (Twitter): [x.com/HeyPuter](https://x.com/HeyPuter)
 - Reddit: [reddit.com/r/puter/](https://www.reddit.com/r/puter/)
@@ -121,17 +120,17 @@ Connect with the maintainers and community through these channels:
 - Security issues? [security@puter.com](mailto:security@puter.com)
 - Email maintainers at [hi@puter.com](mailto:hi@puter.com)
 
-We are always happy to help you with any questions you may have. Don't hesitate to ask!
+మీకు ఏవైనా సందేహాలు ఉంటే మీకు సహాయం చేయడానికి మేము ఎల్లప్పుడూ సంతోషిస్తాము. అడగడానికి సంకోచించకండి!
 
 <br/>
 
-## License
+## లైసెన్సు
 
-This repository, including all its contents, sub-projects, modules, and components, is licensed under [AGPL-3.0](https://github.com/HeyPuter/puter/blob/main/LICENSE.txt) unless explicitly stated otherwise. Third-party libraries included in this repository may be subject to their own licenses.
+ఈ రిపోజిటరీ, దాని మొత్తం కంటెంట్‌లు, ఉప-ప్రాజెక్ట్‌లు, మాడ్యూల్స్ మరియు కాంపోనెంట్‌లతో సహా, [AGPL-3.0](https://github.com/HeyPuter/puter/blob/main/LICENSE.txt) కింద లైసెన్స్‌ని కలిగి ఉంటుంది. . ఈ రిపోజిటరీలో చేర్చబడిన థర్డ్-పార్టీ లైబ్రరీలు వాటి స్వంత లైసెన్స్‌లకు లోబడి ఉండవచ్చు.
 
 <br/>
 
-## Translations
+## అనువాదాలు
 
 - [Arabic / العربية](https://github.com/HeyPuter/puter/blob/main/doc/i18n/README.ar.md)
 - [Armenian / Հայերեն](https://github.com/HeyPuter/puter/blob/main/doc/i18n/README.hy.md)
